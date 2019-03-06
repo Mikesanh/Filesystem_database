@@ -1,0 +1,16 @@
+﻿  Data_structure.cpp
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(3): warning C4081: expected 'newline'; found ';'
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(86): warning C4805: '==': unsafe mix of type 'int' and type 'bool' in operation
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(122): warning C4018: '<': signed/unsigned mismatch
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(104): warning C4101: 'sysfield': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(163): warning C4018: '<': signed/unsigned mismatch
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(147): warning C4101: 'sysfield': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(240): warning C4101: 'reg_f': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(303): warning C4101: 'reg_f': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(675): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(640): warning C4101: 'reg_f': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(962): warning C4101: 'sysfield': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(1028): warning C4101: 'reg_f': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(1182): warning C4101: 'reg_f': unreferenced local variable
+c:\users\sanch\documents\todos los proyectos estructura de datos 2\proyecto_archivosbi\file_databese_test\data_structure.cpp(1338): warning C4101: 'reg_f': unreferenced local variable
+  File_databese_test.vcxproj -> C:\Users\sanch\Documents\TODOS LOS PROYECTOS ESTRUCTURA DE DATOS 2\Proyecto_ArchivosBI\Debug\File_databese_test.exe
