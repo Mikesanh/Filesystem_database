@@ -59,6 +59,11 @@ struct db_metadata { //(12 bytes)
 	
 	void  select_specific_column(db_metadata dbm);
 	void select_specific_column_helper(int index, db_metadata dbm, char chosen_column[10]);
+
+	void delete_all_records(int index, db_metadata dbm);
+
+	void update_where(int index, db_metadata dbm, char chosen_column[10], char chosen_column_2[10]);
+	void update_record_block(int index, db_metadata dbm, int record_block);
 };
 
 //TABLE STRUCTURE---------------------------------------------

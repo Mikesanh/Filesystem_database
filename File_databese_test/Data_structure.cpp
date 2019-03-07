@@ -162,8 +162,11 @@ void db_metadata::list_systables(db_metadata dbm) {
 	cout << "---------TABLES IN FILE--------" << endl;
 	for (int i = 0; i < sys_vector.size(); i++)
 	{
-		cout << "Table name: "; cout << sys_vector[i].table_name; cout << " Index: ";
-		cout << sys_vector[i].index; cout << endl;
+		if (strcmp(sys_vector[i].table_name, "Deleted") != 0) {
+			cout << "Table name: "; cout << sys_vector[i].table_name; cout << " Index: ";
+			cout << sys_vector[i].index; cout << endl;
+
+		}
 
 	}
 
@@ -174,10 +177,11 @@ void db_metadata::select(db_metadata dbm) {
 	system("CLS");
 	int option = 0;
 	char tabl_name[20];
-	cout << "1)Show all tables" << endl;
-	cout << "2)Show all columns from a table" << endl;
-	cout << "3)Show specific column records from a table" << endl;
-	cout << "4)Show all records from table" << endl;
+	cout << "1) Select all tables" << endl;
+	cout << "2) Select all columns from a table" << endl;
+	cout << "3) Select all records from a specific column" << endl;
+	cout << "4) Select all records from table" << endl;
+	cout << endl;
 	cout << "Enter option here:";
 	cin >> option; cout << endl;
 	if (option == 1) {
@@ -194,9 +198,10 @@ void db_metadata::select(db_metadata dbm) {
 		show_table_columns(full_index);
 	}
 	if (option == 3) {
-		select_specific_column(dbm);
-		system("pause");
 		system("CLS");
+		select_specific_column(dbm);
+
+
 
 	}
 	if (option == 4) {
@@ -325,6 +330,7 @@ void db_metadata::show_all_records(int index, db_metadata dbm, int recursive_sto
 		cout << table_object2.table_name;
 		cout << endl;
 		cout << "---------------Showing records---------------------" << endl;
+		cout << endl;
 	}
 
 
@@ -348,7 +354,7 @@ void db_metadata::show_all_records(int index, db_metadata dbm, int recursive_sto
 			cout << "Column name: ";
 			for (int i = 0; i < table_object2.vector_size; i++)
 			{
-				cout << table_object2.fields[i].field_name; cout << "   ";
+				cout << table_object2.fields[i].field_name; cout << "                ";
 			}
 		}
 		cout << endl;
@@ -356,21 +362,29 @@ void db_metadata::show_all_records(int index, db_metadata dbm, int recursive_sto
 		{
 			for (int i = 0; i < table_object2.vector_size; i++)
 			{
-				n = (int)db_file.tellg();
+
 				if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
-					n = (int)db_file.tellg();
+
 					db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
-					n = (int)db_file.tellg();
-					cout << ""; cout << integer_field; cout << "   ";
+
+					if (integer_field != 10101) {
+						cout << "             "; cout << integer_field; cout << "   ";
+					}
 				}
 				else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
 					db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
-					cout << ""; cout << dbl_field; cout << "   ";
+					if (dbl_field != 10101.1) {
+						cout << "             "; cout << dbl_field; cout << "   ";
+					}
+
 				}
 				else {
 					varchar = new char[atoi(table_object2.fields[i].field_type)];
 					db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
-					cout << ""; cout << varchar; cout << "   ";
+					if (strcmp(varchar, "$") != 0) {
+						cout << "             "; cout << varchar; cout << "   ";
+					}
+
 				}
 
 			}
@@ -381,15 +395,7 @@ void db_metadata::show_all_records(int index, db_metadata dbm, int recursive_sto
 
 
 	}
-	/*int tbl_index = get_table_index(dbm, table_object2.table_name);
-	db_file.seekg(tbl_index - 8);
-	block block_reader;
-	db_file.read(reinterpret_cast<char*>(&block_reader), sizeof(block));
-	db_file.close();
-	if (block_reader.next > 1 && recursive_stop == 0) {
-		show_all_records((block_reader.next - dbm.block_size), dbm, 1);
-	}
-	return;*/
+
 	where = (int)db_file.tellg();
 	int tbl_index = index + dbm.block_size;
 	db_file.seekg(tbl_index - 8);
@@ -605,8 +611,10 @@ void db_metadata::create_table(db_metadata dbm)
 void db_metadata::insert_records_part1(db_metadata dbm) {
 	char table_name_[20];
 	list_systables(dbm);
+	cout << endl;
 	cout << "Enter table name: ";
 	cin >> table_name_; cout << endl;
+	system("CLS");
 	int index = get_table_index(dbm, table_name_);
 	int full_index = (index - dbm.block_size);
 	insert_records_part2(full_index, dbm);
@@ -693,11 +701,11 @@ void db_metadata::insert_records_part2(int index, db_metadata dbm) {//Given the 
 		int r_size = dbm.block_size - 8;
 		db_file.seekg(right_now_pos);//niu
 		if (regdata.records_count == 1) {
-			db_file.seekg((int)db_file.tellg()+(regdata.records_count *reg_fields_move));
+			db_file.seekg((int)db_file.tellg() + (regdata.records_count *reg_fields_move));
 			where = (int)db_file.tellg();
 		}
 		else {
-			db_file.seekg((int)db_file.tellg()+((regdata.records_count - 1)*reg_fields_move));
+			db_file.seekg((int)db_file.tellg() + ((regdata.records_count - 1)*reg_fields_move));
 		}
 
 		//If the block is full
@@ -785,7 +793,7 @@ void db_metadata::insert_records_part2(int index, db_metadata dbm) {//Given the 
 						varchar = new char[atoi(table_object2.fields[i].field_type)];
 						cout << "Enter record: ";
 						cin >> varchar;
-						int n =(int)db_file.tellg();
+						int n = (int)db_file.tellg();
 						n = (int)db_file.tellg();
 						db_file.write(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
 					}
@@ -804,11 +812,11 @@ void db_metadata::insert_records_part2(int index, db_metadata dbm) {//Given the 
 			db_file.write(reinterpret_cast<char*>(&regdata), sizeof(records_metadata));
 			n = (int)db_file.tellg();
 			if (regdata.records_count == 1) {
-				db_file.seekg((int)db_file.tellg()+regdata.records_count *reg_fields_move);
+				db_file.seekg((int)db_file.tellg() + regdata.records_count *reg_fields_move);
 				where = (int)db_file.tellg();
 			}
 			else {
-				db_file.seekg((int)db_file.tellg()+(regdata.records_count - 1)*reg_fields_move);
+				db_file.seekg((int)db_file.tellg() + (regdata.records_count - 1)*reg_fields_move);
 			}
 
 			for (int i = 0; i < table_object2.vector_size; i++)
@@ -845,13 +853,14 @@ void db_metadata::insert_records_part2(int index, db_metadata dbm) {//Given the 
 					cout << table_object2.fields[i].field_name; cout << " ";
 					cout << " Char "; cout << table_object2.fields[i].field_type; cout << endl;
 
-					n=(int)db_file.tellg();
+					n = (int)db_file.tellg();
 					varchar = new char[atoi(table_object2.fields[i].field_type)];
 					cout << "Enter record: ";
 					cin >> varchar;
+					cout << endl;
 					db_file.seekg((int)db_file.tellg() - sizeof(char)*atoi(table_object2.fields[i].field_type));
-				
-					n=(int)db_file.tellg();
+
+					n = (int)db_file.tellg();
 					n = (int)db_file.tellg();
 					db_file.write(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
 				}
@@ -928,8 +937,11 @@ void db_metadata::drop_table(db_metadata dbm) {
 
 	char table_name_[20];
 	list_systables(dbm);
+	cout << "---------------DROP TABLE----------------" << endl;
+	cout << endl;
 	cout << "Enter table name: ";
 	cin >> table_name_; cout << endl;
+	cout << endl;
 	int table_index = ((get_table_index(dbm, table_name_)));
 	drop_table_helper(table_index, dbm, table_name_, 0);
 
@@ -976,6 +988,7 @@ void db_metadata::drop_table_helper(int table_index, db_metadata dbm, char table
 				strcpy(sysfield.table_name, "Deleted");
 				sysfield.index = -1;
 				db_file.write(reinterpret_cast<char*>(&sysfield), sizeof(sys_table_field));
+				cout << "Deleted" << endl;
 				return;
 			}
 		}
@@ -986,20 +999,37 @@ void db_metadata::drop_table_helper(int table_index, db_metadata dbm, char table
 
 }
 
+//DELETE RECORDS
 void db_metadata::delete_record(db_metadata dbm) {
 	system("CLS");
 	char tabl_name[20];
+	char chosen_column[10];
+	int option = 0;
+
 	list_systables(dbm);
+	cout << endl;
 	cout << "Enter table name: ";
 	cin >> tabl_name;
 	int index = get_table_index(dbm, tabl_name);
 	int full_index = (index - dbm.block_size);
-	char chosen_column[10];
-	show_table_columns(index - dbm.block_size);
 	cout << endl;
-	cout << "Enter the column where the record is located" << endl;
-	cin >> chosen_column; cout << endl;
-	delete_record_helper(full_index, dbm, chosen_column);
+	cout << "1) Delete records from specific column" << endl;
+	cout << "2) Delete all records" << endl;
+	cout << endl;
+	cout << "Enter option here: ";
+	cin >> option; cout << endl;
+
+	if (option == 1) {
+		show_table_columns(index - dbm.block_size);
+		cout << endl;
+		cout << "Enter the column where the record is located" << endl;
+		cin >> chosen_column; cout << endl;
+		delete_record_helper(full_index, dbm, chosen_column);
+	}
+	else {
+		delete_all_records(full_index, dbm);
+	}
+
 }
 
 void db_metadata::delete_record_helper(int index, db_metadata dbm, char chosen_column[10]) {
@@ -1067,53 +1097,78 @@ void db_metadata::delete_record_helper(int index, db_metadata dbm, char chosen_c
 
 			for (int i = 0; i < table_object2.vector_size; i++)
 			{
-				
-				system("CLS");
+				option = 0;
+
 				if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0) {
 					if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
+						int return_pos = (int)db_file.tellg();
 						db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
-						cout << "Record found : "; cout << integer_field; cout << " "; cout << table_object2.fields[i].field_type; cout << endl;
+						int after_pos = (int)db_file.tellg();
+						if (integer_field != 10101) {
+							cout << "Record found : "; cout << integer_field; cout << " "; cout << table_object2.fields[i].field_type; cout << endl;
 
-						cout << "Delete this record?  1)yes 2)no" << endl;
-						cin >> option;
-						if (option == 1) {
-							db_file.seekg((int)db_file.tellg() - sizeof(int));
-							int integer_field2=000;
-							db_file.write(reinterpret_cast<char*>(&integer_field2), sizeof(int));
-							cout << "Deleted" << endl;
+							cout << "Delete this record?  1)yes 2)no" << endl;
+							cin >> option;
+							if (option == 1) {
+								db_file.seekg(return_pos);
+								int integer_field2 = 10101;
+								db_file.write(reinterpret_cast<char*>(&integer_field2), sizeof(int));
+								cout << "Deleted" << endl;
+								db_file.seekg(after_pos);
+							}
+							else {
+								option = 0;
+							}
 						}
+
 
 
 					}
 					else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
-
+						int return_pos = (int)db_file.tellg();
 						db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
-						cout << "Record: "; cout << dbl_field; cout << " "; cout << table_object2.fields[i].field_type;  cout << endl;
+						int after_pos = (int)db_file.tellg();
+						if (dbl_field != 10101.1) {
+							cout << "Record: "; cout << dbl_field; cout << " "; cout << table_object2.fields[i].field_type;  cout << endl;
 
-						cout << "Delete this record?  1)yes 2)no" << endl;
-						cin >> option;
-						if (option == 1) {
-							db_file.seekg((int)db_file.tellg() - sizeof(double));
-							double dbl_field2=000;
-							db_file.write(reinterpret_cast<char*>(&dbl_field2), sizeof(double));
-							cout << "Deleted" << endl;
+							cout << "Delete this record?  1)yes 2)no" << endl;
+							cin >> option;
+							if (option == 1) {
+								db_file.seekg(return_pos);
+								double dbl_field2 = 10101.1;
+								db_file.write(reinterpret_cast<char*>(&dbl_field2), sizeof(double));
+								cout << "Deleted" << endl;
+								db_file.seekg(after_pos);
+							}
+
 						}
+
 					}
 
 					else {
 						varchar = new char[atoi(table_object2.fields[i].field_type)];
+						int return_pos = (int)db_file.tellg();
 						db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
-						cout << "Record: "; cout << varchar; cout << " Char("; cout << table_object2.fields[i].field_type; cout << ")"; cout << endl;
+						int after_pos = (int)db_file.tellg();
+						if (strcmp(varchar, "$") != 0) {
+							cout << "Record: "; cout << varchar; cout << " Char("; cout << table_object2.fields[i].field_type; cout << ")"; cout << endl;
 
-						cout << "Delete this record?  1)yes 2)no" << endl;
-						cin >> option;
-						if (option == 1) {
-							db_file.seekg((int)db_file.tellg() - sizeof(char)*atoi(table_object2.fields[i].field_type));
-							char* varchar2 = new char[atoi(table_object2.fields[i].field_type)];
-							strcpy(varchar2, "000");
-							db_file.write(reinterpret_cast<char*>(&varchar2[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
-							cout << "Deleted" << endl;
+							cout << "Delete this record?  1)yes 2)no" << endl;
+							cin >> option;
+							if (option == 1) {
+								db_file.seekg(return_pos);
+								char* varchar2 = new char[atoi(table_object2.fields[i].field_type)];
+								strcpy(varchar2, "$");
+								db_file.write(reinterpret_cast<char*>(&varchar2[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+								cout << "Deleted" << endl;
+								db_file.seekg(after_pos);
+							}
+							else {
+								option = 0;
+							}
+
 						}
+
 					}
 
 
@@ -1140,23 +1195,359 @@ void db_metadata::delete_record_helper(int index, db_metadata dbm, char chosen_c
 
 }
 
+void db_metadata::delete_all_records(int index, db_metadata dbm) {
+	fstream db_file(db_name, ios_base::in | ios_base::out | ios_base::binary);
+	if (!db_file) {
+		cout << "Problem with Binary file";
+		return;
+	}
+
+	//Objects
+	table table_object2;
+
+	//Create a varibale wich stores int,char and doubles sizes 
+	int reg_fields_move = 0;//Move this times per reigstry
+
+							//Enter block index
+	db_file.seekg(index);
+
+	//Fill table object with data from file
+	db_file.read(reinterpret_cast<char*>(&table_object2.table_name), sizeof(char) * 20);
+	db_file.read(reinterpret_cast<char*>(&table_object2.vector_size), sizeof(int));
+
+	for (int i = 0; i < table_object2.vector_size; i++)
+	{
+		field field_object;
+		records_field reg_f;
+
+		db_file.read(reinterpret_cast<char*>(&field_object), sizeof(field));
+		table_object2.fields.push_back(field_object);
+
+		//Fill how many bytes will be necessary to move)-------------------------------------------------
+		if (strcmp(field_object.field_type, "int") == 0) {
+			reg_fields_move = reg_fields_move + 4;
+		}
+		else if (strcmp(field_object.field_type, "double") == 0) {
+			reg_fields_move = reg_fields_move + 8;
+		}
+		else {
+			reg_fields_move = reg_fields_move + atoi(field_object.field_type);
+		}
+		int n = (int)db_file.tellg();
+		//Insert(beta)-------------------------------------------------
+	}
+
+	//Print whats inside table object
+
+
+
+	//INSERT(BETA)-------------------------------------------------------
+	int n = (int)db_file.tellg();
+	records_metadata regdata;
+
+	db_file.read(reinterpret_cast<char*>(&regdata), sizeof(records_metadata));
+
+	n = (int)db_file.tellg();
+	int integer_field;
+	double dbl_field;
+	char* varchar;
+
+
+	if (strcmp(regdata.records_separator, "records") == 0) {
+		cout << endl;
+		for (int i = 0; i < regdata.records_count; i++)
+		{
+
+			for (int i = 0; i < table_object2.vector_size; i++)
+			{
+
+				if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
+					int return_pos = (int)db_file.tellg();
+					db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
+					int after_pos = (int)db_file.tellg();
+
+					db_file.seekg(return_pos);
+					int integer_field2 = 10101;
+					db_file.write(reinterpret_cast<char*>(&integer_field2), sizeof(int));
+					cout << "Deleted" << endl;
+					db_file.seekg(after_pos);
+
+
+
+				}
+				else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
+					int return_pos = (int)db_file.tellg();
+					db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
+					int after_pos = (int)db_file.tellg();
+
+					db_file.seekg(return_pos);
+					double dbl_field2 = 10101.1;
+					db_file.write(reinterpret_cast<char*>(&dbl_field2), sizeof(double));
+					cout << "Deleted" << endl;
+					db_file.seekg(after_pos);
+
+				}
+
+				else {
+					varchar = new char[atoi(table_object2.fields[i].field_type)];
+					int return_pos = (int)db_file.tellg();
+					db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+					int after_pos = (int)db_file.tellg();
+
+					db_file.seekg((int)db_file.tellg() - sizeof(char)*atoi(table_object2.fields[i].field_type));
+					char* varchar2 = new char[atoi(table_object2.fields[i].field_type)];
+					strcpy(varchar2, "$");
+					db_file.write(reinterpret_cast<char*>(&varchar2[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+					cout << "Deleted" << endl;
+					db_file.seekg(after_pos);
+
+				}
+
+
+			}
+
+		}
+
+	}
+	int tbl_index = index + dbm.block_size;
+	db_file.seekg(tbl_index - 8);
+	block block_reader;
+	db_file.read(reinterpret_cast<char*>(&block_reader), sizeof(block));
+	db_file.close();
+	if (block_reader.next > 1) {
+		delete_all_records((block_reader.next - dbm.block_size), dbm);
+	}
+	return;
+
+
+
+}
+
+//UPDATE RECORDS
 void db_metadata::update_record(db_metadata dbm) {
 	system("CLS");
 	char tabl_name[20];
+	char chosen_column[10];
+	char chosen_column_2[10];
+
+	int option = 0;
+
 	list_systables(dbm);
+	cout << endl;
 	cout << "Enter table name: ";
 	cin >> tabl_name;
+	cout << endl;
 	int index = get_table_index(dbm, tabl_name);
 	int full_index = (index - dbm.block_size);
-	char chosen_column[10];
-	show_table_columns(index - dbm.block_size);
+
+	cout << "1) Update record from specific column manually" << endl;
+	cout << "2) Update records from specific column using record name " << endl;
+	cout << "3) Update a block of records " << endl;
 	cout << endl;
-	cout << "Enter the column you want to update" << endl;
-	cin >> chosen_column; cout << endl;
-	update_record_helper(full_index, dbm, chosen_column);
+	cout << "Enter option here: ";
+	cin >> option; cout << endl;
+
+
+	if (option == 1) {
+		system("CLS");
+		show_table_columns(index - dbm.block_size);
+		cout << endl;
+		cout << "Enter the column you want to update" << endl;
+		cin >> chosen_column; cout << endl;
+		update_record_helper(full_index, dbm, chosen_column);
+	}
+	if (option == 2) {
+		system("CLS");
+		show_table_columns(index - dbm.block_size);
+		cout << endl;
+		cout << "UPDATE NAME WHERE ID=2";
+		cout << "Update all records from " << endl;
+		cout << "Column 1: "; cin >> chosen_column; cout << chosen_column << endl;
+		cout << "Where " << endl;
+		cout << "Column 2: " << endl; cin >> chosen_column_2; cout << chosen_column_2 << endl;
+		cout << "Has Record: " << endl;
+		update_where(full_index, dbm, chosen_column, chosen_column_2);
+	}
+	if (option == 3) {
+		int record_block = 0;
+		system("CLS");
+		show_all_records(full_index, dbm, 0);
+		cout << endl;
+		cout << "--Choose a record block (Starts from 0)--" << endl;
+		cout << "Enter record block here: ";
+		cin >> record_block; cout << endl;
+		update_record_block(full_index, dbm, record_block);
+	}
+
+}
+//FIXED UPDATE
+void db_metadata::update_record_helper(int index, db_metadata dbm, char chosen_column[10]) {
+	fstream db_file(db_name, ios_base::in | ios_base::out | ios_base::binary);
+	if (!db_file) {
+		cout << "Problem with Binary file";
+		return;
+	}
+
+	//Objects
+	table table_object2;
+
+	//Create a varibale wich stores int,char and doubles sizes 
+	int reg_fields_move = 0;//Move this times per reigstry
+
+							//Enter block index
+	db_file.seekg(index);
+
+	//Fill table object with data from file
+	db_file.read(reinterpret_cast<char*>(&table_object2.table_name), sizeof(char) * 20);
+	db_file.read(reinterpret_cast<char*>(&table_object2.vector_size), sizeof(int));
+
+	for (int i = 0; i < table_object2.vector_size; i++)
+	{
+		field field_object;
+		records_field reg_f;
+
+		db_file.read(reinterpret_cast<char*>(&field_object), sizeof(field));
+		table_object2.fields.push_back(field_object);
+
+		//Fill how many bytes will be necessary to move)-------------------------------------------------
+		if (strcmp(field_object.field_type, "int") == 0) {
+			reg_fields_move = reg_fields_move + 4;
+		}
+		else if (strcmp(field_object.field_type, "double") == 0) {
+			reg_fields_move = reg_fields_move + 8;
+		}
+		else {
+			reg_fields_move = reg_fields_move + atoi(field_object.field_type);
+		}
+		int n = (int)db_file.tellg();
+		//Insert(beta)-------------------------------------------------
+	}
+
+	//Print whats inside table object
+
+
+
+	//INSERT(BETA)-------------------------------------------------------
+	int n = (int)db_file.tellg();
+	records_metadata regdata;
+
+	db_file.read(reinterpret_cast<char*>(&regdata), sizeof(records_metadata));
+
+	n = (int)db_file.tellg();
+
+
+	int option = 0;
+	if (strcmp(regdata.records_separator, "records") == 0) {
+		cout << endl;
+		for (int i = 0; i < regdata.records_count; i++)
+		{
+			n = (int)db_file.tellg();
+			for (int i = 0; i < table_object2.vector_size; i++)
+			{
+				int integer_field;
+				double dbl_field;
+				char* varchar;
+
+				system("CLS");
+
+				if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
+					int return_pos = (int)db_file.tellg();
+					db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
+					int after_pos = (int)db_file.tellg();
+
+					if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0 && integer_field != 10101) {
+						cout << "Record found : "; cout << integer_field; cout << " ";
+						cout << table_object2.fields[i].field_type; cout << endl;
+						cout << "Update this record?  1)yes 2)no" << endl;
+						cin >> option;
+						if (option == 1) {
+							n = (int)db_file.tellg();
+							db_file.seekg(return_pos);
+							cout << "Enter new record: ";
+							n = (int)db_file.tellg();
+							cin >> integer_field; cout << endl;
+							n = (int)db_file.tellg();
+							db_file.write(reinterpret_cast<char*>(&integer_field), sizeof(int));
+							db_file.seekg(after_pos);
+							cout << "Updated" << endl;
+
+
+						}
+					}
+
+				}
+				else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
+					int return_pos = (int)db_file.tellg();
+					db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
+					int after_pos = (int)db_file.tellg();
+					if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0 && integer_field != 10101.1) {
+						cout << "Record: "; cout << dbl_field; cout << " ";
+						cout << table_object2.fields[i].field_type;  cout << endl;
+
+						cout << "Update this record?  1)yes 2)no" << endl;
+						cin >> option;
+						if (option == 1) {
+							db_file.seekg(return_pos);
+							cout << "Enter new record: ";
+							cin >> dbl_field; cout << endl;
+							db_file.write(reinterpret_cast<char*>(&dbl_field), sizeof(double));
+							cout << "Updated" << endl;
+							db_file.seekg(after_pos);
+
+						}
+					}
+
+
+				}
+
+				else {
+					varchar = new char[atoi(table_object2.fields[i].field_type)];
+					int return_pos = (int)db_file.tellg();
+					db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+					int after_pos = (int)db_file.tellg();
+					if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0 && strcmp(varchar, "$") != 0) {
+
+						cout << "Record: "; cout << varchar; cout << " Char(";
+						cout << table_object2.fields[i].field_type; cout << ")"; cout << endl;
+
+						cout << "Update this record?  1)yes 2)no" << endl;
+						cin >> option;
+						if (option == 1) {
+							db_file.seekg(return_pos);
+							cout << "Enter new record: ";
+							cin >> varchar; cout << endl;
+							db_file.write(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+							cout << "Updated" << endl;
+							db_file.seekg(after_pos);
+
+						}
+
+					}
+
+
+				}
+
+				cout << endl;
+
+			}
+
+		}
+
+	}
+	int tbl_index = index + dbm.block_size;
+	db_file.seekg(tbl_index - 8);
+	block block_reader;
+	db_file.read(reinterpret_cast<char*>(&block_reader), sizeof(block));
+	db_file.close();
+	if (block_reader.next > 1) {
+		update_record_helper((block_reader.next - dbm.block_size), dbm, chosen_column);
+	}
+	return;
+
+
 }
 
-void db_metadata::update_record_helper(int index, db_metadata dbm, char chosen_column[10]) {
+void db_metadata::update_where(int index, db_metadata dbm, char chosen_column[10], char chosen_column_2[10]) {
 	fstream db_file(db_name, ios_base::in | ios_base::out | ios_base::binary);
 	if (!db_file) {
 		cout << "Problem with Binary file";
@@ -1295,13 +1686,190 @@ void db_metadata::update_record_helper(int index, db_metadata dbm, char chosen_c
 
 }
 
+void db_metadata::update_record_block(int index, db_metadata dbm, int record_block) {
+	fstream db_file(db_name, ios_base::in | ios_base::out | ios_base::binary);
+	if (!db_file) {
+		cout << "Problem with Binary file";
+		return;
+	}
 
+	//Objects
+	table table_object2;
+
+	//Create a varibale wich stores int,char and doubles sizes 
+	int reg_fields_move = 0;//Move this times per reigstry
+
+							//Enter block index
+	db_file.seekg(index);
+
+	//Fill table object with data from file
+	db_file.read(reinterpret_cast<char*>(&table_object2.table_name), sizeof(char) * 20);
+	db_file.read(reinterpret_cast<char*>(&table_object2.vector_size), sizeof(int));
+
+	for (int i = 0; i < table_object2.vector_size; i++)
+	{
+		field field_object;
+		records_field reg_f;
+
+		db_file.read(reinterpret_cast<char*>(&field_object), sizeof(field));
+		table_object2.fields.push_back(field_object);
+
+		//Fill how many bytes will be necessary to move)-------------------------------------------------
+		if (strcmp(field_object.field_type, "int") == 0) {
+			reg_fields_move = reg_fields_move + 4;
+		}
+		else if (strcmp(field_object.field_type, "double") == 0) {
+			reg_fields_move = reg_fields_move + 8;
+		}
+		else {
+			reg_fields_move = reg_fields_move + atoi(field_object.field_type);
+		}
+		int n = (int)db_file.tellg();
+		//Insert(beta)-------------------------------------------------
+	}
+
+	//Print whats inside table object
+
+	int integer_field;
+	double dbl_field;
+	char* varchar;
+
+
+	//INSERT(BETA)-------------------------------------------------------
+	int n = (int)db_file.tellg();
+	records_metadata regdata;
+
+	db_file.read(reinterpret_cast<char*>(&regdata), sizeof(records_metadata));
+
+	n = (int)db_file.tellg();
+
+
+	int option = 0;
+	if (strcmp(regdata.records_separator, "records") == 0) {
+		cout << endl;
+		for (int i = 0; i < regdata.records_count; i++)
+		{
+			if (i == record_block) {
+				for (int i = 0; i < table_object2.vector_size; i++)
+				{
+					system("CLS");
+					if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
+						int return_pos = (int)db_file.tellg();
+						db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
+						int after_pos = (int)db_file.tellg();
+						if (integer_field != 10101) {
+							cout << "Record found : "; cout << integer_field; cout << " "; cout << table_object2.fields[i].field_type; cout << endl;
+
+							cout << "Update this record?  1)yes 2)no" << endl;
+							cin >> option;
+							if (option == 1) {
+								db_file.seekg(return_pos);
+								cout << "Enter new record: ";
+								cin >> integer_field; cout << endl;
+								db_file.write(reinterpret_cast<char*>(&integer_field), sizeof(int));
+								cout << "Updated" << endl;
+								db_file.seekg(after_pos);
+							}
+						}
+
+
+
+					}
+					else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
+						int return_pos = (int)db_file.tellg();
+						db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
+						int after_pos = (int)db_file.tellg();
+						if (dbl_field != 10101.1) {
+							cout << "Record: "; cout << dbl_field; cout << " "; cout << table_object2.fields[i].field_type;  cout << endl;
+
+							cout << "Update this record?  1)yes 2)no" << endl;
+							cin >> option;
+							if (option == 1) {
+								db_file.seekg(return_pos);
+								cout << "Enter new record: ";
+								cin >> dbl_field; cout << endl;
+								db_file.write(reinterpret_cast<char*>(&dbl_field), sizeof(double));
+								cout << "Updated" << endl;
+								db_file.seekg(after_pos);
+							}
+						}
+
+					}
+
+					else {
+						varchar = new char[atoi(table_object2.fields[i].field_type)];
+						int return_pos = (int)db_file.tellg();
+						db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+						int after_pos = (int)db_file.tellg();
+						if (strcmp(varchar, "$") != 0) {
+							cout << "Record: "; cout << varchar; cout << " Char(";
+							cout << table_object2.fields[i].field_type; cout << ")"; cout << endl;
+
+							cout << "Update this record?  1)yes 2)no" << endl;
+							cin >> option;
+							if (option == 1) {
+								db_file.seekg(return_pos);
+								cout << "Enter new record: ";
+								cin >> varchar; cout << endl;
+								db_file.write(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+								cout << "Updated" << endl;
+								db_file.seekg(after_pos);
+							}
+						}
+
+					}
+
+
+					cout << endl;
+
+				}
+				return;
+			}
+			else {			///IF NOT IN RECORD BLOCK
+				for (int i = 0; i < table_object2.vector_size; i++)
+				{
+					if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
+						db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
+					}
+					else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
+						db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
+					}
+
+					else {
+						varchar = new char[atoi(table_object2.fields[i].field_type)];
+						db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+					}
+					cout << endl;
+
+				}
+			}
+
+
+		}
+
+	}
+	int tbl_index = index + dbm.block_size;
+	db_file.seekg(tbl_index - 8);
+	block block_reader;
+	db_file.read(reinterpret_cast<char*>(&block_reader), sizeof(block));
+	db_file.close();
+	if (block_reader.next > 1) {
+		update_record_block((block_reader.next - dbm.block_size), dbm, record_block);
+	}
+	return;
+
+
+}
+
+//SELECT RECORDS
 void db_metadata::select_specific_column(db_metadata dbm) {
 	system("CLS");
 	char tabl_name[20];
 	list_systables(dbm);
+	cout << endl;
 	cout << "Enter table name: ";
 	cin >> tabl_name;
+	cout << endl;
 	int index = get_table_index(dbm, tabl_name);
 	int full_index = (index - dbm.block_size);
 	char chosen_column[10];
@@ -1373,47 +1941,47 @@ void db_metadata::select_specific_column_helper(int index, db_metadata dbm, char
 	int option = 0;
 	if (strcmp(regdata.records_separator, "records") == 0) {
 		cout << endl;
-		cout<<"Column name: ";cout << chosen_column << endl;
-		cout<<">Records"<< endl;
+		cout << "Column name: "; cout << chosen_column << endl;
+		cout << ">Records" << endl;
 		for (int i = 0; i < regdata.records_count; i++)
 		{
 
 			for (int i = 0; i < table_object2.vector_size; i++)
 			{
-				
-				
-					if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
-						
-							db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
-							if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0) {
-								cout << integer_field; cout << endl;
-							}
-						
-					}
-					else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
-					
-							db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
-							if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0) {
-								cout << integer_field; cout << endl;
-							}
-						
+
+
+				if (strcmp(table_object2.fields[i].field_type, "int") == 0) {
+
+					db_file.read(reinterpret_cast<char*>(&integer_field), sizeof(int));
+					if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0) {
+						cout << integer_field; cout << endl;
 					}
 
-					else {
+				}
+				else if (strcmp(table_object2.fields[i].field_type, "double") == 0) {
 
-						varchar = new char[atoi(table_object2.fields[i].field_type)];
-						db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
-						if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0) {
-							cout << varchar; cout << endl;
-						}
+					db_file.read(reinterpret_cast<char*>(&dbl_field), sizeof(double));
+					if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0) {
+						cout << integer_field; cout << endl;
+					}
 
+				}
 
+				else {
+
+					varchar = new char[atoi(table_object2.fields[i].field_type)];
+					db_file.read(reinterpret_cast<char*>(&varchar[0]), sizeof(char)*atoi(table_object2.fields[i].field_type));
+					if (strcmp(chosen_column, table_object2.fields[i].field_name) == 0) {
+						cout << varchar; cout << endl;
 					}
 
 
-				
+				}
 
-				
+
+
+
+
 
 			}
 

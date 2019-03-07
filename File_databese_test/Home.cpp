@@ -171,7 +171,7 @@ int main() {
 
 		system("pause");
 
-	}while (true);
+	} while (true);
 
 
 };
